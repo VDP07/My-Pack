@@ -3,12 +3,12 @@
 // ===================================
 //
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyC_liB6C8htRS32vQlhg-ia21Yn4t0jU1w",
+  authDomain: "my-pack-app.firebaseapp.com",
+  projectId: "my-pack-app",
+  storageBucket: "my-pack-app.firebasestorage.app",
+  messagingSenderId: "274047313523",
+  appId: "1:274047313523:web:128a39ad70274c765a6c06"
 };
 
 // Initialize Firebase
