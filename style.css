@@ -133,4 +133,10 @@ main {
     display: flex;
     justify-content: center;
     align-items: center;
+
+/* Style fix to make our card links look right */
+a {
+    text-decoration: none; /* Removes the underline */
+    color: inherit;      /* Makes the link text use the color of its parent */
+}
 }

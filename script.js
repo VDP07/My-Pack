@@ -30,45 +30,49 @@ const addPackButton = document.getElementById('add-pack-button');
 
 
 //
-// Part 3: DISPLAY THE PACKS FROM THE DATABASE
+// Part 3: GET HTML ELEMENTS
 // ===================================
-//
-// This is the most important function. It listens for ANY change in our database collection.
-packsCollection.orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-    // First, clear the list on the screen
+// // This is our main function to draw all the packs on the screen.
+function displayPacks() {
+    // First, we clear the screen of any old list to prevent duplicates.
     packListContainer.innerHTML = '';
-    
+
     // Check if the database collection is empty
     if (snapshot.empty) {
         packListContainer.innerHTML = `<p class="loading-message">No packs yet. Click the '+' button to add your first one!</p>`;
-        return;
+        return; // Stop the function here
     }
 
-    // Loop through each document (each pack) in the database
+    // We loop through each document (each pack) in the database
     snapshot.forEach(doc => {
         const pack = doc.data(); // The data for the pack
         const id = doc.id;      // The unique ID of the document
 
+        // Create a link element that will wrap our card
+        const link = document.createElement('a');
+        link.href = `pack.html?id=${id}`; // This is the magic! We pass the ID in the URL.
+
         // Create the HTML card for the pack
         const packCard = document.createElement('div');
         packCard.className = 'pack-card';
-        packCard.setAttribute('data-id', id);
 
         packCard.innerHTML = `
             <div class="pack-card-header">
                 <h2>${pack.title}</h2>
                 <div class="card-actions">
-                    <i class="fas fa-trash-alt delete-icon"></i>
+                    <i class="fas fa-trash-alt delete-icon" data-id="${id}"></i>
                 </div>
             </div>
             <div class="pack-card-body">
                 <p>${pack.category}</p>
             </div>
         `;
-        packListContainer.appendChild(packCard);
-    });
-});
 
+        // Put the card inside the link, and put the link on the page
+        link.appendChild(packCard);
+        packListContainer.appendChild(link);
+    });
+}
 
 //
 // Part 4: ADD A NEW PACK
@@ -87,17 +91,16 @@ addPackButton.addEventListener('click', () => {
 });
 
 
-//
 // Part 5: DELETE A PACK
 // ===================================
 //
 packListContainer.addEventListener('click', (event) => {
     // Check if the clicked element was a delete icon
     if (event.target.classList.contains('delete-icon')) {
+        event.preventDefault(); // IMPORTANT: Stop the link from being followed
         const confirmDelete = confirm("Are you sure you want to delete this pack?");
         if (confirmDelete) {
-            const card = event.target.closest('.pack-card');
-            const id = card.getAttribute('data-id');
+            const id = event.target.getAttribute('data-id');
             // Tell Firebase to delete the document with this specific ID
             packsCollection.doc(id).delete();
         }

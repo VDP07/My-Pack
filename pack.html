@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pack Details</title>
+    
+    <link rel="stylesheet" href="style.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header>
+        <a href="/" style="text-decoration: none; color: inherit; font-size: 24px;">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        <h1 id="pack-title">Loading...</h1>
+    </header>
+
+    <main>
+        <div class="add-item-form">
+            <input type="text" id="new-item-input" placeholder="Add a new item...">
+            <button id="add-item-button">Add</button>
+        </div>
+
+        <ul id="item-list" class="item-list-container">
+            </ul>
+    </main>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+    <script src="pack-detail.js"></script>
+</body>
+</html>
