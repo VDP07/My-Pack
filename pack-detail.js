@@ -1,16 +1,14 @@
 //
-// Part 1: CONNECT TO FIREBASE (same as before)
+// Part 1: CONNECT TO FIREBASE
 // ===================================
 //
-// TODO: Paste your Firebase config object here.
 const firebaseConfig = {
-  apiKey: "AIzaSyC_liB6C8htRS32vQlhg-ia21Yn4t0jU1w",
-  authDomain: "my-pack-app.firebaseapp.com",
-  projectId: "my-pack-app",
-  storageBucket: "my-pack-app.firebasestorage.app",
-  messagingSenderId: "274047313523",
-  appId: "1:274047313523:web:128a39ad70274c765a6c06"
-
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
 // Initialize Firebase
@@ -21,7 +19,6 @@ const db = firebase.firestore();
 // Part 2: GET THE PACK ID FROM THE URL
 // ===================================
 //
-// This code reads the "note" we passed in the URL to find the pack's unique ID.
 const urlParams = new URLSearchParams(window.location.search);
 const packId = urlParams.get('id');
 
@@ -32,17 +29,17 @@ const packId = urlParams.get('id');
 const packTitleElement = document.getElementById('pack-title');
 const addItemForm = document.querySelector('.add-item-form');
 const newItemInput = document.getElementById('new-item-input');
+const newItemNoteInput = document.getElementById('new-item-note-input'); // NEW: Find the note input
 const itemList = document.getElementById('item-list');
 
 //
 // Part 4: LOAD THE PACK'S TITLE
 // ===================================
 //
-// We fetch the specific pack document from Firebase to get its title.
 db.collection('packs').doc(packId).get().then(doc => {
     if (doc.exists) {
         packTitleElement.textContent = doc.data().title;
-        document.title = doc.data().title; // Also set the browser tab title
+        document.title = doc.data().title;
     } else {
         packTitleElement.textContent = "Pack not found";
     }
@@ -52,21 +49,24 @@ db.collection('packs').doc(packId).get().then(doc => {
 // Part 5: LISTEN FOR AND DISPLAY ITEMS
 // ===================================
 //
-// This is the core logic. We are listening to a sub-collection called "items"
-// that lives inside our specific pack document.
 const itemsCollection = db.collection('packs').doc(packId).collection('items');
 
 itemsCollection.orderBy('createdAt').onSnapshot(snapshot => {
-    itemList.innerHTML = ''; // Clear the list
+    itemList.innerHTML = ''; 
     snapshot.forEach(doc => {
         const item = doc.data();
         const id = doc.id;
 
         const li = document.createElement('li');
         li.setAttribute('data-id', id);
+        
+        // UPDATED: Now includes a span for the note if it exists
         li.innerHTML = `
-            <input type="checkbox" ${item.packed ? 'checked' : ''}>
-            <span class="item-text ${item.packed ? 'packed' : ''}">${item.name}</span>
+            <div class="item-content">
+                <input type="checkbox" ${item.packed ? 'checked' : ''}>
+                <span class="item-text ${item.packed ? 'packed' : ''}">${item.name}</span>
+                ${item.note ? `<span class="item-note">${item.note}</span>` : ''}
+            </div>
             <i class="fas fa-trash-alt delete-item-icon"></i>
         `;
         itemList.appendChild(li);
@@ -76,40 +76,45 @@ itemsCollection.orderBy('createdAt').onSnapshot(snapshot => {
 //
 // Part 6: ADD A NEW ITEM
 // ===================================
+//
 addItemForm.addEventListener('submit', (event) => {
-    event.preventDefault();
+    event.preventDefault(); 
     const itemName = newItemInput.value.trim();
+    const itemNote = newItemNoteInput.value.trim(); // NEW: Get the note value
+
     if (itemName) {
-        // Add the new item to the sub-collection
+        // UPDATED: Add the new 'note' field to the database
         itemsCollection.add({
             name: itemName,
+            note: itemNote, // Add the note here
             packed: false,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // Also, update the count on the parent pack document
         const packRef = db.collection('packs').doc(packId);
         packRef.update({
             totalItems: firebase.firestore.FieldValue.increment(1)
         });
 
-        newItemInput.value = ''; // Clear the input box
+        newItemInput.value = ''; 
+        newItemNoteInput.value = ''; // NEW: Clear the note input box
     }
 });
 
 //
 // Part 7: UPDATE (PACK/UNPACK) AND DELETE ITEMS
 // ===================================
+//
 itemList.addEventListener('click', (event) => {
     const target = event.target;
     const li = target.closest('li');
+    if (!li) return; // Exit if the click wasn't inside a list item
+
     const id = li.getAttribute('data-id');
     const packRef = db.collection('packs').doc(packId);
 
-    // If the trash can icon was clicked
     if (target.classList.contains('delete-item-icon')) {
         itemsCollection.doc(id).delete();
-        // Decrement both total and packed counts if the deleted item was packed
         const checkbox = li.querySelector('input[type="checkbox"]');
         if (checkbox.checked) {
             packRef.update({
@@ -123,11 +128,9 @@ itemList.addEventListener('click', (event) => {
         }
     }
 
-    // If the checkbox was clicked
     if (target.type === 'checkbox') {
         const isPacked = target.checked;
         itemsCollection.doc(id).update({ packed: isPacked });
-        // Increment or decrement the packedItems count
         if (isPacked) {
             packRef.update({ packedItems: firebase.firestore.FieldValue.increment(1) });
         } else {

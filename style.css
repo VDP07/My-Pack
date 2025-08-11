@@ -148,3 +148,64 @@ a {
     text-decoration: none; /* Removes the underline */
     color: inherit;      /* Makes the link text use the color of its parent */
 }
+/* Styles for the detail page form and list */
+.add-item-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.add-item-form input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+.add-item-form button {
+    padding: 10px 15px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.item-list-container {
+    list-style-type: none;
+    padding: 0;
+    border-radius: 8px;
+    background-color: white;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.item-list-container li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    border-bottom: 1px solid #f0f2f5;
+}
+.item-list-container li:last-child {
+    border-bottom: none;
+}
+.item-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.item-details {
+    display: flex;
+    flex-direction: column;
+}
+.item-text.packed {
+    text-decoration: line-through;
+    color: #6c757d;
+}
+.item-note {
+    font-size: 13px;
+    color: #6c757d;
+    margin-top: 2px;
+}
+.delete-item-icon {
+    cursor: pointer;
+    color: #dc3545;
+    margin-left: 15px;
+}
