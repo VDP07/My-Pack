@@ -272,3 +272,17 @@ a {
     text-decoration: none;
     cursor: pointer;
 }
+/* Styles for the Search Bar */
+.search-container {
+    padding: 0 20px 10px 20px;
+    background-color: white;
+}
+
+#search-input {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box; /* Important for padding and width */
+}
