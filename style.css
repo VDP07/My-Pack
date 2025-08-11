@@ -65,7 +65,6 @@ main {
     flex-shrink: 0;
 }
 
-/* NEW: Style for the edit icon */
 .edit-icon {
     cursor: pointer;
     color: #007bff; /* Blue color for edit */
@@ -75,24 +74,26 @@ main {
 
 .delete-icon {
     cursor: pointer;
-    /* margin-left: 15px; -- This is no longer needed */
     color: #dc3545; /* A shade of red */
     font-size: 16px;
 }
 
 /* This styles the little category tags */
-.pack-category {
+.pack-category-display {
     font-size: 12px;
     font-weight: 500;
     padding: 4px 8px;
     border-radius: 12px;
     color: white;
     background-color: #6c757d; /* A default grey */
+    display: inline-block;
+    margin-bottom: 10px;
 }
 
-.pack-category.race { background-color: #007bff; }
-.pack-category.school { background-color: #28a745; }
-.pack-category.general { background-color: #6c757d; }
+.pack-category-display.race { background-color: #007bff; }
+.pack-category-display.school { background-color: #28a745; }
+.pack-category-display.personal { background-color: #ffc107; color: #212529;}
+
 
 .pack-card-body {
     padding: 15px;
@@ -274,8 +275,9 @@ a {
 }
 /* Styles for the Search Bar */
 .search-container {
-    padding: 0 20px 10px 20px;
+    padding: 20px 20px 10px 20px;
     background-color: white;
+    border-bottom: 1px solid #eee;
 }
 
 #search-input {
@@ -285,4 +287,34 @@ a {
     border: 1px solid #ddd;
     border-radius: 8px;
     box-sizing: border-box; /* Important for padding and width */
+}
+
+/* NEW: Styles for Filter Buttons */
+.filter-container {
+    padding: 10px 20px;
+    background-color: white;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap; /* Allows buttons to wrap on smaller screens */
+}
+
+.filter-btn {
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    background-color: #f8f9fa;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease-in-out;
+}
+
+.filter-btn:hover {
+    background-color: #e2e6ea;
+}
+
+.filter-btn.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
 }

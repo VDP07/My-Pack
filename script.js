@@ -24,16 +24,36 @@ const addPackButton = document.getElementById('add-pack-button');
 const modal = document.getElementById('add-pack-modal');
 const closeModalButton = document.querySelector('.close-button');
 const addPackForm = document.getElementById('add-pack-form');
-const searchInput = document.getElementById('search-input'); // NEW: Get search input
-
-// NEW: A variable to hold all our packs from the database
-let allPacks = [];
+const searchInput = document.getElementById('search-input');
+const filterContainer = document.querySelector('.filter-container'); // NEW: Get filter container
 
 //
-// Part 3: RENDER AND DISPLAY PACKS
+// Part 3: APP STATE & RENDERING
 // ===================================
 //
-// NEW: A dedicated function to draw packs on the screen
+let allPacks = [];
+let currentFilter = 'all'; // NEW: Keep track of the active filter
+
+// NEW: A combined function to filter and render packs
+function filterAndRenderPacks() {
+    const searchTerm = searchInput.value.toLowerCase();
+    
+    let filteredPacks = allPacks;
+
+    // First, apply the category filter
+    if (currentFilter !== 'all') {
+        filteredPacks = filteredPacks.filter(pack => pack.category === currentFilter);
+    }
+
+    // Then, apply the search term
+    if (searchTerm) {
+        filteredPacks = filteredPacks.filter(pack => pack.title.toLowerCase().includes(searchTerm));
+    }
+
+    renderPacks(filteredPacks);
+}
+
+
 function renderPacks(packsToRender) {
     packListContainer.innerHTML = '';
     if (packsToRender.length === 0) {
@@ -64,30 +84,37 @@ function renderPacks(packsToRender) {
                 <p class="progress-text">${pack.packedItems || 0} / ${pack.totalItems || 0} items</p>
             </div>
         `;
-
+        
         link.appendChild(packCard);
         packListContainer.appendChild(link);
     });
 }
 
-// UPDATED: The listener now saves packs to our variable and then calls renderPacks
+// The main listener now saves packs and calls the filter/render function
 packsCollection.orderBy('createdAt', 'desc').onSnapshot(snapshot => {
     allPacks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    renderPacks(allPacks);
+    filterAndRenderPacks(); // Use the new combined function
 });
 
 //
-// Part 4: HANDLE SEARCH
+// Part 4: HANDLE SEARCH AND FILTER
 // ===================================
 //
-// NEW: Listen for typing in the search box
-searchInput.addEventListener('input', (event) => {
-    const searchTerm = event.target.value.toLowerCase();
-    const filteredPacks = allPacks.filter(pack => {
-        return pack.title.toLowerCase().includes(searchTerm);
-    });
-    renderPacks(filteredPacks);
+searchInput.addEventListener('input', filterAndRenderPacks); // Search now calls the combined function
+
+// NEW: Listen for clicks on the filter buttons
+filterContainer.addEventListener('click', (event) => {
+    if (event.target.classList.contains('filter-btn')) {
+        // Update the active button style
+        document.querySelector('.filter-btn.active').classList.remove('active');
+        event.target.classList.add('active');
+        
+        // Update the current filter and re-render
+        currentFilter = event.target.dataset.category;
+        filterAndRenderPacks();
+    }
 });
+
 
 //
 // Part 5: HANDLE THE "ADD PACK" MODAL
