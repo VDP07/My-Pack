@@ -3,6 +3,7 @@
 // ===================================
 //
 const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyC_liB6C8htRS32vQlhg-ia21Yn4t0jU1w",
   authDomain: "my-pack-app.firebaseapp.com",
   projectId: "my-pack-app",
@@ -10,13 +11,8 @@ const firebaseConfig = {
   messagingSenderId: "274047313523",
   appId: "1:274047313523:web:128a39ad70274c765a6c06"
 };
-
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
-
-// Create a reference to the Firestore database
 const db = firebase.firestore();
-// Create a reference to our "packs" collection.
 const packsCollection = db.collection('packs');
 
 //
@@ -25,6 +21,10 @@ const packsCollection = db.collection('packs');
 //
 const packListContainer = document.getElementById('pack-list-container');
 const addPackButton = document.getElementById('add-pack-button');
+// NEW: Get modal elements
+const modal = document.getElementById('add-pack-modal');
+const closeModalButton = document.querySelector('.close-button');
+const addPackForm = document.getElementById('add-pack-form');
 
 //
 // Part 3: LISTEN FOR DATA AND DISPLAY PACKS
@@ -41,14 +41,12 @@ packsCollection.orderBy('createdAt', 'desc').onSnapshot(snapshot => {
     snapshot.forEach(doc => {
         const pack = doc.data();
         const id = doc.id;
-
         const link = document.createElement('a');
         link.href = `pack.html?id=${id}`;
-        
         const packCard = document.createElement('div');
         packCard.className = 'pack-card';
 
-        // THIS IS THE UPDATED SECTION
+        // UPDATED: Now displays the date and category
         packCard.innerHTML = `
             <div class="pack-card-header">
                 <h2>${pack.title}</h2>
@@ -58,7 +56,8 @@ packsCollection.orderBy('createdAt', 'desc').onSnapshot(snapshot => {
                 </div>
             </div>
             <div class="pack-card-body">
-                <p>${pack.category || 'General'}</p>
+                <p class="pack-category-display ${pack.category ? pack.category.toLowerCase() : ''}">${pack.category || 'General'}</p>
+                <p class="pack-date-display">${pack.date || ''}</p>
                 <div class="progress-container">
                     <div class="progress-bar" style="width: ${((pack.packedItems || 0) / (pack.totalItems || 1)) * 100}%;"></div>
                 </div>
@@ -72,21 +71,47 @@ packsCollection.orderBy('createdAt', 'desc').onSnapshot(snapshot => {
 });
 
 //
-// Part 4: ADD A NEW PACK
+// Part 4: HANDLE THE "ADD PACK" MODAL
 // ===================================
 //
+// Open the modal when the '+' button is clicked
 addPackButton.addEventListener('click', () => {
-    const title = prompt("Enter the name for your new pack:");
+    modal.style.display = "block";
+});
+
+// Close the modal when the 'x' is clicked
+closeModalButton.addEventListener('click', () => {
+    modal.style.display = "none";
+});
+
+// Close the modal if the user clicks outside of it
+window.addEventListener('click', (event) => {
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+});
+
+// Handle the form submission
+addPackForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const title = document.getElementById('pack-title-input').value;
+    const category = document.getElementById('pack-category-input').value;
+    const date = document.getElementById('pack-date-input').value;
+
     if (title) {
         packsCollection.add({
             title: title,
-            category: "General",
+            category: category,
+            date: date,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            totalItems: 0, // Initialize counts for new packs
+            totalItems: 0,
             packedItems: 0
         });
+        addPackForm.reset(); // Clear the form
+        modal.style.display = "none"; // Hide the modal
     }
 });
+
 
 //
 // Part 5: EDIT AND DELETE PACKS
