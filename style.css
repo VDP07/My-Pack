@@ -90,10 +90,12 @@ main {
     margin-bottom: 10px;
 }
 
-.pack-category-display.race { background-color: #007bff; }
+.pack-category-display.travel { background-color: #17a2b8; }
 .pack-category-display.school { background-color: #28a745; }
 .pack-category-display.personal { background-color: #ffc107; color: #212529;}
-
+.pack-category-display.coaching { background-color: #fd7e14; }
+.pack-category-display.study { background-color: #6f42c1; }
+.pack-category-display.other { background-color: #6c757d; }
 
 .pack-card-body {
     padding: 15px;
