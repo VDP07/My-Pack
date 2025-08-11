@@ -1,0 +1,136 @@
+/* This file controls the design, color, and layout of our app. */
+
+/* Basic setup for the whole page */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    padding-bottom: 100px;
+}
+
+/* Styling for the header bar at the top */
+header {
+    background-color: white;
+    padding: 15px 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+/* Styling for the main area that holds our list cards */
+main {
+    padding: 20px;
+}
+
+/* A simple style for the "Loading..." message */
+.loading-message {
+    text-align: center;
+    color: #6c757d;
+    font-size: 16px;
+    padding: 40px;
+}
+
+/* This is the main styling for each of our list cards */
+.pack-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.pack-card-header {
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eef0f2;
+}
+
+.pack-card-header h2 {
+    margin: 0;
+    font-size: 18px;
+    word-break: break-word;
+}
+
+.card-actions {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.delete-icon {
+    cursor: pointer;
+    margin-left: 15px;
+    color: #dc3545; /* A shade of red */
+    font-size: 16px;
+}
+
+/* This styles the little category tags */
+.pack-category {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 12px;
+    color: white;
+    background-color: #6c757d; /* A default grey */
+}
+
+.pack-category.race { background-color: #007bff; }
+.pack-category.school { background-color: #28a745; }
+.pack-category.general { background-color: #6c757d; }
+
+.pack-card-body {
+    padding: 15px;
+}
+
+.pack-card-body p {
+    margin: 0 0 10px 0;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+/* Styling the progress bar */
+.progress-container {
+    background-color: #e9ecef;
+    border-radius: 10px;
+    height: 8px;
+    margin-bottom: 5px;
+}
+
+.progress-bar {
+    background-color: #007bff;
+    height: 100%;
+    border-radius: 10px;
+}
+
+.progress-text {
+    font-size: 12px;
+    text-align: right;
+    margin-bottom: 0;
+}
+
+/* Styling for the big blue '+' button at the bottom */
+.fab {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 24px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
