@@ -320,3 +320,14 @@ a {
     color: white;
     border-color: #007bff;
 }
+/* Styles for Drag and Drop */
+.drag-handle {
+    cursor: grab;
+    color: #ccc;
+    margin-right: 15px;
+}
+
+.sortable-ghost {
+    opacity: 0.4;
+    background-color: #c8ebfb;
+}

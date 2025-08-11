@@ -10,7 +10,7 @@ const firebaseConfig = {
   messagingSenderId: "274047313523",
   appId: "1:274047313523:web:128a39ad70274c765a6c06"
 };
-// Initialize Firebase
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
@@ -28,7 +28,7 @@ const packId = urlParams.get('id');
 const packTitleElement = document.getElementById('pack-title');
 const addItemForm = document.querySelector('.add-item-form');
 const newItemInput = document.getElementById('new-item-input');
-const newItemNoteInput = document.getElementById('new-item-note-input'); // NEW: Find the note input
+const newItemNoteInput = document.getElementById('new-item-note-input');
 const itemList = document.getElementById('item-list');
 
 //
@@ -49,26 +49,43 @@ db.collection('packs').doc(packId).get().then(doc => {
 // ===================================
 //
 const itemsCollection = db.collection('packs').doc(packId).collection('items');
+let sortableInstance = null; // To hold our SortableJS instance
 
-itemsCollection.orderBy('createdAt').onSnapshot(snapshot => {
+// UPDATED: Now we order by the 'order' field
+itemsCollection.orderBy('order').onSnapshot(snapshot => {
     itemList.innerHTML = ''; 
+    const items = [];
     snapshot.forEach(doc => {
-        const item = doc.data();
-        const id = doc.id;
+        items.push({ id: doc.id, ...doc.data() });
+    });
 
+    items.forEach(item => {
         const li = document.createElement('li');
-        li.setAttribute('data-id', id);
+        li.setAttribute('data-id', item.id);
         
-        // UPDATED: Now includes a span for the note if it exists
         li.innerHTML = `
             <div class="item-content">
+                <i class="fas fa-grip-vertical drag-handle"></i>
                 <input type="checkbox" ${item.packed ? 'checked' : ''}>
-                <span class="item-text ${item.packed ? 'packed' : ''}">${item.name}</span>
-                ${item.note ? `<span class="item-note">${item.note}</span>` : ''}
+                <div class="item-details">
+                    <span class="item-text ${item.packed ? 'packed' : ''}">${item.name}</span>
+                    ${item.note ? `<span class="item-note">${item.note}</span>` : ''}
+                </div>
             </div>
             <i class="fas fa-trash-alt delete-item-icon"></i>
         `;
         itemList.appendChild(li);
+    });
+
+    // Initialize SortableJS after items are rendered
+    if (sortableInstance) {
+        sortableInstance.destroy();
+    }
+    sortableInstance = new Sortable(itemList, {
+        handle: '.drag-handle', // Use the grip icon to drag
+        animation: 150,
+        ghostClass: 'sortable-ghost', // A class for the drop placeholder
+        onEnd: saveOrder, // Call our save function when dragging ends
     });
 });
 
@@ -76,18 +93,22 @@ itemsCollection.orderBy('createdAt').onSnapshot(snapshot => {
 // Part 6: ADD A NEW ITEM
 // ===================================
 //
-addItemForm.addEventListener('submit', (event) => {
+addItemForm.addEventListener('submit', async (event) => {
     event.preventDefault(); 
     const itemName = newItemInput.value.trim();
-    const itemNote = newItemNoteInput.value.trim(); // NEW: Get the note value
+    const itemNote = newItemNoteInput.value.trim();
 
     if (itemName) {
-        // UPDATED: Add the new 'note' field to the database
+        // Get the current number of items to set the order for the new one
+        const currentItemsSnapshot = await itemsCollection.get();
+        const newOrder = currentItemsSnapshot.size;
+
         itemsCollection.add({
             name: itemName,
-            note: itemNote, // Add the note here
+            note: itemNote,
             packed: false,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            order: newOrder // Set the order to be the last item
         });
 
         const packRef = db.collection('packs').doc(packId);
@@ -96,18 +117,31 @@ addItemForm.addEventListener('submit', (event) => {
         });
 
         newItemInput.value = ''; 
-        newItemNoteInput.value = ''; // NEW: Clear the note input box
+        newItemNoteInput.value = '';
     }
 });
 
 //
-// Part 7: UPDATE (PACK/UNPACK) AND DELETE ITEMS
+// Part 7: UPDATE, DELETE, AND SAVE ORDER
 // ===================================
 //
+function saveOrder() {
+    const items = itemList.querySelectorAll('li');
+    const batch = db.batch(); // Use a batch to update all items at once
+
+    items.forEach((item, index) => {
+        const docId = item.getAttribute('data-id');
+        const docRef = itemsCollection.doc(docId);
+        batch.update(docRef, { order: index });
+    });
+
+    batch.commit(); // Send all updates to Firebase
+}
+
 itemList.addEventListener('click', (event) => {
     const target = event.target;
     const li = target.closest('li');
-    if (!li) return; // Exit if the click wasn't inside a list item
+    if (!li) return;
 
     const id = li.getAttribute('data-id');
     const packRef = db.collection('packs').doc(packId);
@@ -125,6 +159,8 @@ itemList.addEventListener('click', (event) => {
                 totalItems: firebase.firestore.FieldValue.increment(-1)
             });
         }
+        // After deleting, we should re-run saveOrder to fix the order numbers
+        setTimeout(saveOrder, 100);
     }
 
     if (target.type === 'checkbox') {
