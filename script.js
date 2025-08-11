@@ -3,7 +3,6 @@
 // ===================================
 //
 const firebaseConfig = {
-const firebaseConfig = {
   apiKey: "AIzaSyC_liB6C8htRS32vQlhg-ia21Yn4t0jU1w",
   authDomain: "my-pack-app.firebaseapp.com",
   projectId: "my-pack-app",
