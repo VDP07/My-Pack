@@ -65,9 +65,17 @@ main {
     flex-shrink: 0;
 }
 
+/* NEW: Style for the edit icon */
+.edit-icon {
+    cursor: pointer;
+    color: #007bff; /* Blue color for edit */
+    font-size: 16px;
+    margin-right: 15px; /* Adds space between the icons */
+}
+
 .delete-icon {
     cursor: pointer;
-    margin-left: 15px;
+    /* margin-left: 15px; -- This is no longer needed */
     color: #dc3545; /* A shade of red */
     font-size: 16px;
 }
@@ -133,10 +141,10 @@ main {
     display: flex;
     justify-content: center;
     align-items: center;
+}
 
 /* Style fix to make our card links look right */
 a {
     text-decoration: none; /* Removes the underline */
     color: inherit;      /* Makes the link text use the color of its parent */
-}
 }

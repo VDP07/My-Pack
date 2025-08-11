@@ -10,7 +10,6 @@ const firebaseConfig = {
   storageBucket: "my-pack-app.firebasestorage.app",
   messagingSenderId: "274047313523",
   appId: "1:274047313523:web:128a39ad70274c765a6c06"
-
 };
 
 // Initialize Firebase
@@ -60,6 +59,8 @@ packsCollection.orderBy('createdAt', 'desc').onSnapshot(snapshot => {
             <div class="pack-card-header">
                 <h2>${pack.title}</h2>
                 <div class="card-actions">
+                    {/* CHANGE #1: Added the new edit icon here */}
+                    <i class="fas fa-pencil-alt edit-icon" data-id="${id}"></i>
                     <i class="fas fa-trash-alt delete-icon" data-id="${id}"></i>
                 </div>
             </div>
@@ -71,35 +72,3 @@ packsCollection.orderBy('createdAt', 'desc').onSnapshot(snapshot => {
         // Put the card inside the link, and put the link on the page
         link.appendChild(packCard);
         packListContainer.appendChild(link);
-    });
-});
-
-//
-// Part 4: ADD A NEW PACK
-// ===================================
-//
-addPackButton.addEventListener('click', () => {
-    const title = prompt("Enter the name for your new pack:");
-    if (title) {
-        packsCollection.add({
-            title: title,
-            category: "General",
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-    }
-});
-
-//
-// Part 5: DELETE A PACK
-// ===================================
-//
-packListContainer.addEventListener('click', (event) => {
-    if (event.target.classList.contains('delete-icon')) {
-        event.preventDefault(); // Stop the link from being followed
-        const confirmDelete = confirm("Are you sure you want to delete this pack?");
-        if (confirmDelete) {
-            const id = event.target.getAttribute('data-id');
-            packsCollection.doc(id).delete();
-        }
-    }
-});
