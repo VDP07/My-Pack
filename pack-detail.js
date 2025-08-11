@@ -76,16 +76,23 @@ itemsCollection.orderBy('createdAt').onSnapshot(snapshot => {
 //
 // Part 6: ADD A NEW ITEM
 // ===================================
-//
 addItemForm.addEventListener('submit', (event) => {
-    event.preventDefault(); // Stop the form from reloading the page
+    event.preventDefault();
     const itemName = newItemInput.value.trim();
     if (itemName) {
+        // Add the new item to the sub-collection
         itemsCollection.add({
             name: itemName,
             packed: false,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
+
+        // Also, update the count on the parent pack document
+        const packRef = db.collection('packs').doc(packId);
+        packRef.update({
+            totalItems: firebase.firestore.FieldValue.increment(1)
+        });
+
         newItemInput.value = ''; // Clear the input box
     }
 });
@@ -93,20 +100,38 @@ addItemForm.addEventListener('submit', (event) => {
 //
 // Part 7: UPDATE (PACK/UNPACK) AND DELETE ITEMS
 // ===================================
-//
 itemList.addEventListener('click', (event) => {
     const target = event.target;
     const li = target.closest('li');
     const id = li.getAttribute('data-id');
+    const packRef = db.collection('packs').doc(packId);
 
     // If the trash can icon was clicked
     if (target.classList.contains('delete-item-icon')) {
         itemsCollection.doc(id).delete();
+        // Decrement both total and packed counts if the deleted item was packed
+        const checkbox = li.querySelector('input[type="checkbox"]');
+        if (checkbox.checked) {
+            packRef.update({
+                totalItems: firebase.firestore.FieldValue.increment(-1),
+                packedItems: firebase.firestore.FieldValue.increment(-1)
+            });
+        } else {
+            packRef.update({
+                totalItems: firebase.firestore.FieldValue.increment(-1)
+            });
+        }
     }
 
     // If the checkbox was clicked
     if (target.type === 'checkbox') {
         const isPacked = target.checked;
         itemsCollection.doc(id).update({ packed: isPacked });
+        // Increment or decrement the packedItems count
+        if (isPacked) {
+            packRef.update({ packedItems: firebase.firestore.FieldValue.increment(1) });
+        } else {
+            packRef.update({ packedItems: firebase.firestore.FieldValue.increment(-1) });
+        }
     }
 });

@@ -48,6 +48,7 @@ packsCollection.orderBy('createdAt', 'desc').onSnapshot(snapshot => {
         const packCard = document.createElement('div');
         packCard.className = 'pack-card';
 
+        // THIS IS THE UPDATED SECTION
         packCard.innerHTML = `
             <div class="pack-card-header">
                 <h2>${pack.title}</h2>
@@ -58,6 +59,10 @@ packsCollection.orderBy('createdAt', 'desc').onSnapshot(snapshot => {
             </div>
             <div class="pack-card-body">
                 <p>${pack.category || 'General'}</p>
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: ${((pack.packedItems || 0) / (pack.totalItems || 1)) * 100}%;"></div>
+                </div>
+                <p class="progress-text">${pack.packedItems || 0} / ${pack.totalItems || 0} items</p>
             </div>
         `;
         
@@ -76,7 +81,9 @@ addPackButton.addEventListener('click', () => {
         packsCollection.add({
             title: title,
             category: "General",
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            totalItems: 0, // Initialize counts for new packs
+            packedItems: 0
         });
     }
 });
@@ -86,7 +93,6 @@ addPackButton.addEventListener('click', () => {
 // ===================================
 //
 packListContainer.addEventListener('click', (event) => {
-    // If the delete icon was clicked
     if (event.target.classList.contains('delete-icon')) {
         event.preventDefault(); 
         const confirmDelete = confirm("Are you sure you want to delete this pack?");
@@ -95,7 +101,6 @@ packListContainer.addEventListener('click', (event) => {
             packsCollection.doc(id).delete();
         }
     }
-    // ELSE IF the new edit icon was clicked
     else if (event.target.classList.contains('edit-icon')) {
         event.preventDefault(); 
         const id = event.target.getAttribute('data-id');
@@ -108,4 +113,4 @@ packListContainer.addEventListener('click', (event) => {
             });
         }
     }
-}); // <-- The error was likely a missing bracket here
+});
