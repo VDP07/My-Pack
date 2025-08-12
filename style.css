@@ -25,7 +25,9 @@ header h1 {
     margin: 0;
     font-size: 24px;
     flex-grow: 1; 
-    /* The text-align: center; is removed to allow left alignment */
+    text-align: center;
+    /* Balances the back button space. Adjust if needed. */
+    padding-left: 50px; 
 }
 
 .header-action-btn {
@@ -80,7 +82,7 @@ main {
     margin: 0;
     font-size: 18px;
     word-break: break-word;
-    color: #212529; 
+    color: #212529; /* Keep text black */
 }
 
 /* Pack Header BACKGROUND Colors by Category */
@@ -288,13 +290,13 @@ a {
     margin-top: 0;
 }
 
-#add-pack-form, #add-from-template-form {
+#add-pack-form, #add-from-template-form, #share-form { /* UPDATED: Apply to all forms */
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
-#add-pack-form input, #add-pack-form select, #add-from-template-form input, #add-from-template-form select {
+#add-pack-form input, #add-pack-form select, #add-from-template-form input, #add-from-template-form select, #share-form input {
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -302,7 +304,7 @@ a {
     background-color: white; 
 }
 
-#add-pack-form button, #add-from-template-form button {
+#add-pack-form button, #add-from-template-form button, #share-form button {
     padding: 12px;
     border: none;
     background-color: #007bff;
@@ -412,50 +414,24 @@ a {
     gap: 10px;
 }
 
-/* NEW: Styles for Login Prompt and User Profile */
-.login-prompt-container {
-    text-align: center;
-    padding: 50px 20px;
+/* NEW: Styles for Share Modal */
+#collaborators-list {
+    margin-top: 20px;
 }
 
-#user-profile {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    position: relative;
+#collaborators-list h3 {
+    margin-top: 0;
+    font-size: 16px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
 }
 
-#user-profile img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    cursor: pointer;
+#collaborators-list ul {
+    list-style-type: none;
+    padding: 0;
 }
 
-.dropdown-menu {
-    display: none;
-    position: absolute;
-    top: 50px;
-    right: 0;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    overflow: hidden;
-    z-index: 300;
-}
-
-.dropdown-menu a, .dropdown-menu button {
-    display: block;
-    padding: 12px 20px;
-    text-decoration: none;
+#collaborators-list li {
+    padding: 8px 0;
     color: #333;
-    background: none;
-    border: none;
-    width: 100%;
-    text-align: left;
-    cursor: pointer;
-}
-
-.dropdown-menu a:hover, .dropdown-menu button:hover {
-    background-color: #f0f2f5;
 }

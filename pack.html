@@ -20,10 +20,15 @@
             <i class="fas fa-chevron-left"></i>
         </a>
         <h1 id="pack-title">Loading...</h1>
-        <!-- This new button has been added -->
-        <button id="save-template-btn" class="header-action-btn">
-            <i class="fas fa-save"></i> Save as Template
-        </button>
+        <div class="header-buttons">
+            <!-- NEW: Share button added -->
+            <button id="share-pack-btn" class="header-action-btn">
+                <i class="fas fa-user-plus"></i> Share
+            </button>
+            <button id="save-template-btn" class="header-action-btn">
+                <i class="fas fa-save"></i> Save as Template
+            </button>
+        </div>
     </header>
 
     <main>
@@ -38,11 +43,28 @@
         </ul>
     </main>
     
+    <!-- NEW: The Modal for sharing a pack -->
+    <div id="share-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Share Pack</h2>
+            <p>Enter the email address of the user you want to share this pack with.</p>
+            <form id="share-form">
+                <input type="email" id="share-email-input" placeholder="user@example.com" required>
+                <button type="submit">Share Pack</button>
+            </form>
+            <div id="collaborators-list">
+                <h3>Current Collaborators:</h3>
+                <ul><!-- Collaborators will be listed here --></ul>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-    
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-
+    <!-- We need the Auth script here as well -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="pack-detail.js"></script>
     
 </body>

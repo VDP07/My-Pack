@@ -13,9 +13,9 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-const auth = firebase.auth(); // NEW: Initialize Firebase Auth
+const auth = firebase.auth();
 const templatesCollection = db.collection('templates');
-let packsCollection; // This will be set when the user logs in
+let packsCollection; // This will be set for the logged-in user
 
 //
 // Part 2: GET HTML ELEMENTS
@@ -42,26 +42,23 @@ const templateSelectInput = document.getElementById('template-select-input');
 // ===================================
 //
 let currentUser = null;
-let unsubscribePacks = null; // To stop listening to old data when user logs out
+let unsubscribePacks = null;
 
-// Listen for changes in user login state
 auth.onAuthStateChanged(user => {
     currentUser = user;
     if (user) {
-        // User is signed in
         appContent.style.display = 'block';
         loginPrompt.style.display = 'none';
         renderUserProfile(user);
         
-        // Set the collection path to be specific to this user
+        // Set the collection path for the user's OWN packs
         packsCollection = db.collection('users').doc(user.uid).collection('packs');
         listenForPacks();
     } else {
-        // User is signed out
         appContent.style.display = 'none';
         loginPrompt.style.display = 'block';
         renderSignInButton();
-        if (unsubscribePacks) unsubscribePacks(); // Stop listening to old data
+        if (unsubscribePacks) unsubscribePacks();
     }
 });
 
@@ -76,7 +73,6 @@ function renderUserProfile(user) {
             </div>
         </div>
     `;
-    // Add event listeners for the new elements
     document.getElementById('user-avatar').addEventListener('click', () => {
         const menu = document.getElementById('dropdown-menu');
         menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
@@ -85,8 +81,7 @@ function renderUserProfile(user) {
 }
 
 function renderSignInButton() {
-    userAuthContainer.innerHTML = ``; // Clear it in case there's anything
-    // The main sign in button is in the login-prompt div
+    userAuthContainer.innerHTML = ``;
     document.getElementById('sign-in-btn').addEventListener('click', () => {
         const provider = new firebase.auth.GoogleAuthProvider();
         auth.signInWithPopup(provider);
@@ -111,7 +106,7 @@ function formatDate(isoDate) {
 }
 
 function filterAndRenderPacks() {
-    if (!currentUser) return; // Don't run if logged out
+    if (!currentUser) return;
     const searchTerm = searchInput.value.toLowerCase();
     let filteredPacks = allPacks.filter(pack => !pack.archived);
 
@@ -135,7 +130,8 @@ function renderPacks(packsToRender) {
 
     packsToRender.forEach(pack => {
         const link = document.createElement('a');
-        link.href = `pack.html?id=${pack.id}`;
+        // UPDATED: The link now needs the owner's ID for shared packs
+        link.href = `pack.html?id=${pack.id}&ownerId=${pack.ownerId}`;
         link.setAttribute('data-id', pack.id); 
         const packCard = document.createElement('div');
         packCard.className = 'pack-card';
@@ -169,16 +165,46 @@ function renderPacks(packsToRender) {
     });
 }
 
+// UPDATED: This function is now much more complex
 function listenForPacks() {
-    if (unsubscribePacks) unsubscribePacks(); // Unsubscribe from any previous listener
-    unsubscribePacks = packsCollection.orderBy('order').onSnapshot(snapshot => {
-        allPacks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        filterAndRenderPacks();
-    }, error => {
-        console.error("Error listening for packs: ", error);
-        // This is where you might see a permission error if rules are wrong
+    if (unsubscribePacks) unsubscribePacks();
+
+    // Query for packs the user owns
+    const ownedPacksQuery = db.collectionGroup('packs').where('ownerId', '==', currentUser.uid);
+    
+    // Query for packs shared with the user
+    const sharedPacksQuery = db.collectionGroup('packs').where('collaboratorEmails', 'array-contains', currentUser.email);
+
+    // We need two listeners and will combine the results
+    let ownedPacks = [];
+    let sharedPacks = [];
+
+    const unsubscribeOwned = ownedPacksQuery.onSnapshot(snapshot => {
+        ownedPacks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        combineAndRender();
     });
+
+    const unsubscribeShared = sharedPacksQuery.onSnapshot(snapshot => {
+        sharedPacks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        combineAndRender();
+    });
+
+    function combineAndRender() {
+        const combined = [...ownedPacks, ...sharedPacks];
+        // Remove duplicates in case a user somehow shares a pack with the owner
+        const uniquePacks = Array.from(new Map(combined.map(p => [p.id, p])).values());
+        allPacks = uniquePacks;
+        allPacks.sort((a, b) => (a.order || 0) - (b.order || 0));
+        filterAndRenderPacks();
+    }
+
+    // Store a function to unsubscribe from both listeners
+    unsubscribePacks = () => {
+        unsubscribeOwned();
+        unsubscribeShared();
+    };
 }
+
 
 //
 // Part 5: HANDLE SEARCH AND FILTER
@@ -245,16 +271,24 @@ addPackForm.addEventListener('submit', async (event) => {
     const date = document.getElementById('pack-date-input').value;
     if (!title || !category) return alert("Please provide a title and select a category.");
 
+    const packData = { title, category, date };
+
     if (currentEditId) {
-        packsCollection.doc(currentEditId).update({ title, category, date });
+        packsCollection.doc(currentEditId).update(packData);
     } else {
         const currentPacksSnapshot = await packsCollection.where("archived", "==", false).get();
         const newOrder = currentPacksSnapshot.size;
-        packsCollection.add({
-            title, category, date,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            totalItems: 0, packedItems: 0, order: newOrder, archived: false
-        });
+        
+        // Add ownerId when creating
+        packData.ownerId = currentUser.uid;
+        packData.ownerEmail = currentUser.email;
+        packData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        packData.totalItems = 0;
+        packData.packedItems = 0;
+        packData.order = newOrder;
+        packData.archived = false;
+        
+        packsCollection.add(packData);
     }
     addPackForm.reset();
     modal.style.display = "none";
@@ -275,9 +309,16 @@ addFromTemplateForm.addEventListener('submit', async (event) => {
         const currentPacksSnapshot = await packsCollection.where("archived", "==", false).get();
         const newOrder = currentPacksSnapshot.size;
         const newPackRef = await packsCollection.add({
-            title: newPackTitle, category: templateData.category, date: newPackDate,
+            title: newPackTitle,
+            category: templateData.category,
+            date: newPackDate,
+            ownerId: currentUser.uid,
+            ownerEmail: currentUser.email,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            totalItems: templateItems.length, packedItems: 0, order: newOrder, archived: false
+            totalItems: templateItems.length,
+            packedItems: 0,
+            order: newOrder,
+            archived: false
         });
         const batch = db.batch();
         const newItemsCollection = newPackRef.collection('items');
