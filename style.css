@@ -53,7 +53,6 @@ main {
     border-bottom: 1px solid #eef0f2; 
 }
 
-/* UPDATED: Title styling is simplified */
 .pack-card-header h2 {
     margin: 0;
     font-size: 18px;
@@ -61,14 +60,14 @@ main {
     color: #212529; /* Keep text black */
 }
 
-/* UPDATED: Pack Header BACKGROUND Colors by Category */
+/* Pack Header BACKGROUND Colors by Category */
 .pack-card-header.header-travel { background-color: #e8f7fa; border-bottom: 1px solid #d0edf4; }
 .pack-card-header.header-school { background-color: #eaf6ec; border-bottom: 1px solid #d3eecd; }
 .pack-card-header.header-personal { background-color: #fff8e6; border-bottom: 1px solid #ffefc2; }
 .pack-card-header.header-coaching { background-color: #fff2e8; border-bottom: 1px solid #fee3d0; }
 .pack-card-header.header-study { background-color: #f1eafa; border-bottom: 1px solid #e3d4f4; }
 .pack-card-header.header-other { background-color: #f1f3f5; border-bottom: 1px solid #e6e8eb; }
-.pack-card-header.header-general { background-color: #f1f3f5; border-bottom: 1px solid #e6e8eb; }
+.pack-card-header.header-general { background-color: #e7f5ff; border-bottom: 1px solid #d0ebff; }
 
 
 .card-actions {
@@ -96,19 +95,20 @@ main {
     font-weight: 500;
     padding: 4px 8px;
     border-radius: 12px;
-    color: white;
-    background-color: #6c757d; /* A default grey */
+    color: #343a40; /* UPDATED: Dark text for all tags */
+    background-color: #e9ecef; /* A default light grey */
     display: inline-block;
     margin-bottom: 10px;
 }
 
-.pack-category-display.travel { background-color: #17a2b8; }
-.pack-category-display.school { background-color: #28a745; }
-.pack-category-display.personal { background-color: #ffc107; color: #212529;}
-.pack-category-display.coaching { background-color: #fd7e14; }
-.pack-category-display.study { background-color: #6f42c1; }
-.pack-category-display.other { background-color: #6c757d; }
-.pack-category-display.general { background-color: #6c757d; }
+/* UPDATED: Category Tag Colors */
+.pack-category-display.travel { background-color: #d1ecf1; }
+.pack-category-display.school { background-color: #d4edda; }
+.pack-category-display.personal { background-color: #fff3cd; }
+.pack-category-display.coaching { background-color: #ffe8d1; }
+.pack-category-display.study { background-color: #e2d9f3; }
+.pack-category-display.other { background-color: #e9ecef; }
+.pack-category-display.general { background-color: #dbeeff; }
 
 
 .pack-card-body {
