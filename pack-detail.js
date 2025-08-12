@@ -27,6 +27,7 @@ const ownerId = urlParams.get('ownerId');
 // Part 3: GET HTML ELEMENTS
 // ===================================
 //
+const headerElement = document.querySelector('header'); // Get the header element
 const packTitleElement = document.getElementById('pack-title');
 const addItemForm = document.querySelector('.add-item-form');
 const newItemInput = document.getElementById('new-item-input');
@@ -52,8 +53,7 @@ let unsubscribePackListener = null;
 auth.onAuthStateChanged(user => {
     currentUser = user;
     if (user) {
-        // CORRECTED LOGIC: Determine the correct path to the pack document
-        const packOwnerId = ownerId || user.uid; // Use ownerId from URL if it exists, otherwise assume current user
+        const packOwnerId = ownerId || user.uid;
         packRef = db.collection('users').doc(packOwnerId).collection('packs').doc(packId);
         itemsCollection = packRef.collection('items');
         
@@ -77,9 +77,14 @@ function loadPackDetails() {
             currentPackData = doc.data();
             packTitleElement.textContent = currentPackData.title;
             document.title = currentPackData.title;
+            
+            // UPDATED: Apply color class to the header
+            headerElement.className = ''; // Reset classes first
+            const headerClass = currentPackData.category ? `header-${currentPackData.category.toLowerCase()}` : 'header-general';
+            headerElement.classList.add(headerClass);
+
             renderCollaborators(currentPackData.collaboratorEmails || []);
             
-            // Only the owner can save as template or share
             if (currentPackData.ownerId !== currentUser.uid) {
                 saveTemplateBtn.style.display = 'none';
                 sharePackBtn.style.display = 'none';

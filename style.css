@@ -26,7 +26,6 @@ header h1 {
     font-size: 24px;
     flex-grow: 1; 
     text-align: center;
-    /* Balances the back button space. Adjust if needed. */
     padding-left: 50px; 
 }
 
@@ -82,17 +81,17 @@ main {
     margin: 0;
     font-size: 18px;
     word-break: break-word;
-    color: #212529; /* Keep text black */
+    color: #212529; 
 }
 
-/* Pack Header BACKGROUND Colors by Category */
-.pack-card-header.header-travel { background-color: #e8f7fa; border-bottom: 1px solid #d0edf4; }
-.pack-card-header.header-school { background-color: #eaf6ec; border-bottom: 1px solid #d3eecd; }
-.pack-card-header.header-personal { background-color: #fff8e6; border-bottom: 1px solid #ffefc2; }
-.pack-card-header.header-coaching { background-color: #fff2e8; border-bottom: 1px solid #fee3d0; }
-.pack-card-header.header-study { background-color: #f1eafa; border-bottom: 1px solid #e3d4f4; }
-.pack-card-header.header-other { background-color: #f1f3f5; border-bottom: 1px solid #e6e8eb; }
-.pack-card-header.header-general { background-color: #e7f5ff; border-bottom: 1px solid #d0ebff; }
+/* UPDATED: Rules now apply to both .pack-card-header and the main header */
+.pack-card-header.header-travel, header.header-travel { background-color: #e8f7fa; border-bottom: 1px solid #d0edf4; }
+.pack-card-header.header-school, header.header-school { background-color: #eaf6ec; border-bottom: 1px solid #d3eecd; }
+.pack-card-header.header-personal, header.header-personal { background-color: #fff8e6; border-bottom: 1px solid #ffefc2; }
+.pack-card-header.header-coaching, header.header-coaching { background-color: #fff2e8; border-bottom: 1px solid #fee3d0; }
+.pack-card-header.header-study, header.header-study { background-color: #f1eafa; border-bottom: 1px solid #e3d4f4; }
+.pack-card-header.header-other, header.header-other { background-color: #f1f3f5; border-bottom: 1px solid #e6e8eb; }
+.pack-card-header.header-general, header.header-general { background-color: #e7f5ff; border-bottom: 1px solid #d0ebff; }
 
 
 .card-actions {
@@ -290,7 +289,7 @@ a {
     margin-top: 0;
 }
 
-#add-pack-form, #add-from-template-form, #share-form { /* UPDATED: Apply to all forms */
+#add-pack-form, #add-from-template-form, #share-form {
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -414,7 +413,57 @@ a {
     gap: 10px;
 }
 
-/* NEW: Styles for Share Modal */
+/* Styles for Login Prompt and User Profile */
+.login-prompt-container {
+    text-align: center;
+    padding: 50px 20px;
+}
+
+#user-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+}
+
+#user-profile img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 50px;
+    right: 0;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+    z-index: 300;
+    width: 150px;
+}
+
+.dropdown-menu a, .dropdown-menu button {
+    display: block;
+    padding: 12px 20px;
+    text-decoration: none;
+    color: #333;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.dropdown-menu a:hover, .dropdown-menu button:hover {
+    background-color: #f0f2f5;
+}
+
+/* Styles for Share Modal */
 #collaborators-list {
     margin-top: 20px;
 }
