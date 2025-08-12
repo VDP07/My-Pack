@@ -57,16 +57,20 @@ main {
     margin: 0;
     font-size: 18px;
     word-break: break-word;
+    padding: 3px 8px; /* Added padding */
+    border-radius: 5px; /* Added rounded corners */
+    color: #212529; /* Keep text black */
+    display: inline-block; /* Make background fit text */
 }
 
-/* NEW: Pack Title Colors by Category */
-h2.title-travel { color: #17a2b8; }
-h2.title-school { color: #28a745; }
-h2.title-personal { color: #ffc107; }
-h2.title-coaching { color: #fd7e14; }
-h2.title-study { color: #6f42c1; }
-h2.title-other { color: #6c757d; }
-h2.title-general { color: #343a40; }
+/* UPDATED: Pack Title BACKGROUND Colors by Category */
+h2.title-travel { background-color: #e8f7fa; }
+h2.title-school { background-color: #eaf6ec; }
+h2.title-personal { background-color: #fff8e6; }
+h2.title-coaching { background-color: #fff2e8; }
+h2.title-study { background-color: #f1eafa; }
+h2.title-other { background-color: #f1f3f5; }
+h2.title-general { background-color: #f1f3f5; }
 
 
 .card-actions {
@@ -169,7 +173,7 @@ a {
     gap: 10px;
     margin-bottom: 20px;
 }
-.add-item-form input, .add-item-form select { /* UPDATED: Added select */
+.add-item-form input, .add-item-form select {
     flex-grow: 1;
     padding: 10px;
     border: 1px solid #ccc;
@@ -257,7 +261,7 @@ a {
     gap: 15px;
 }
 
-#add-pack-form input, #add-pack-form select { /* UPDATED: Added select */
+#add-pack-form input, #add-pack-form select {
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -332,4 +336,16 @@ a {
     background-color: #007bff;
     color: white;
     border-color: #007bff;
+}
+
+/* Styles for Drag and Drop */
+.drag-handle {
+    cursor: grab;
+    color: #ccc;
+    margin-right: 15px;
+}
+
+.sortable-ghost {
+    opacity: 0.4;
+    background-color: #c8ebfb;
 }
