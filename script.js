@@ -25,34 +25,30 @@ const modal = document.getElementById('add-pack-modal');
 const closeModalButton = document.querySelector('.close-button');
 const addPackForm = document.getElementById('add-pack-form');
 const searchInput = document.getElementById('search-input');
-const filterContainer = document.querySelector('.filter-container'); // NEW: Get filter container
+const filterContainer = document.querySelector('.filter-container');
 
 //
 // Part 3: APP STATE & RENDERING
 // ===================================
 //
 let allPacks = [];
-let currentFilter = 'all'; // NEW: Keep track of the active filter
+let currentFilter = 'all';
+let sortableInstance = null; // To hold our SortableJS instance
 
-// NEW: A combined function to filter and render packs
 function filterAndRenderPacks() {
     const searchTerm = searchInput.value.toLowerCase();
-    
     let filteredPacks = allPacks;
 
-    // First, apply the category filter
     if (currentFilter !== 'all') {
         filteredPacks = filteredPacks.filter(pack => pack.category === currentFilter);
     }
 
-    // Then, apply the search term
     if (searchTerm) {
         filteredPacks = filteredPacks.filter(pack => pack.title.toLowerCase().includes(searchTerm));
     }
 
     renderPacks(filteredPacks);
 }
-
 
 function renderPacks(packsToRender) {
     packListContainer.innerHTML = '';
@@ -64,11 +60,15 @@ function renderPacks(packsToRender) {
     packsToRender.forEach(pack => {
         const link = document.createElement('a');
         link.href = `pack.html?id=${pack.id}`;
+        // The link itself will be the draggable item
+        link.setAttribute('data-id', pack.id); 
+        
         const packCard = document.createElement('div');
         packCard.className = 'pack-card';
 
         packCard.innerHTML = `
             <div class="pack-card-header">
+                <i class="fas fa-grip-vertical drag-handle"></i>
                 <h2>${pack.title}</h2>
                 <div class="card-actions">
                     <i class="fas fa-pencil-alt edit-icon" data-id="${pack.id}"></i>
@@ -88,33 +88,39 @@ function renderPacks(packsToRender) {
         link.appendChild(packCard);
         packListContainer.appendChild(link);
     });
+
+    // Initialize SortableJS after packs are rendered
+    if (sortableInstance) {
+        sortableInstance.destroy();
+    }
+    sortableInstance = new Sortable(packListContainer, {
+        handle: '.drag-handle',
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        onEnd: savePackOrder,
+    });
 }
 
-// The main listener now saves packs and calls the filter/render function
-packsCollection.orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+// UPDATED: Now we order by the 'order' field
+packsCollection.orderBy('order').onSnapshot(snapshot => {
     allPacks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    filterAndRenderPacks(); // Use the new combined function
+    filterAndRenderPacks();
 });
 
 //
 // Part 4: HANDLE SEARCH AND FILTER
 // ===================================
 //
-searchInput.addEventListener('input', filterAndRenderPacks); // Search now calls the combined function
+searchInput.addEventListener('input', filterAndRenderPacks);
 
-// NEW: Listen for clicks on the filter buttons
 filterContainer.addEventListener('click', (event) => {
     if (event.target.classList.contains('filter-btn')) {
-        // Update the active button style
         document.querySelector('.filter-btn.active').classList.remove('active');
         event.target.classList.add('active');
-        
-        // Update the current filter and re-render
         currentFilter = event.target.dataset.category;
         filterAndRenderPacks();
     }
 });
-
 
 //
 // Part 5: HANDLE THE "ADD PACK" MODAL
@@ -134,20 +140,24 @@ window.addEventListener('click', (event) => {
     }
 });
 
-addPackForm.addEventListener('submit', (event) => {
+addPackForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const title = document.getElementById('pack-title-input').value;
     const category = document.getElementById('pack-category-input').value;
     const date = document.getElementById('pack-date-input').value;
 
     if (title) {
+        const currentPacksSnapshot = await packsCollection.get();
+        const newOrder = currentPacksSnapshot.size;
+
         packsCollection.add({
             title: title,
             category: category,
             date: date,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             totalItems: 0,
-            packedItems: 0
+            packedItems: 0,
+            order: newOrder // Set order for the new pack
         });
         addPackForm.reset();
         modal.style.display = "none";
@@ -155,9 +165,22 @@ addPackForm.addEventListener('submit', (event) => {
 });
 
 //
-// Part 6: EDIT AND DELETE PACKS
+// Part 6: EDIT, DELETE, AND SAVE ORDER
 // ===================================
 //
+function savePackOrder() {
+    const links = packListContainer.querySelectorAll('a');
+    const batch = db.batch();
+
+    links.forEach((link, index) => {
+        const docId = link.getAttribute('data-id');
+        const docRef = packsCollection.doc(docId);
+        batch.update(docRef, { order: index });
+    });
+
+    batch.commit();
+}
+
 packListContainer.addEventListener('click', (event) => {
     if (event.target.classList.contains('delete-icon')) {
         event.preventDefault(); 
@@ -165,6 +188,7 @@ packListContainer.addEventListener('click', (event) => {
         if (confirmDelete) {
             const id = event.target.getAttribute('data-id');
             packsCollection.doc(id).delete();
+            // We don't need to re-order here, the onSnapshot listener will handle it
         }
     }
     else if (event.target.classList.contains('edit-icon')) {
