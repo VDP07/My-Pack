@@ -25,8 +25,7 @@ header h1 {
     margin: 0;
     font-size: 24px;
     flex-grow: 1; 
-    text-align: center;
-    padding-left: 50px; 
+    /* The text-align: center; is removed to allow left alignment */
 }
 
 .header-action-btn {
@@ -98,7 +97,7 @@ main {
     display: flex;
     align-items: center;
     flex-shrink: 0;
-    gap: 15px; /* NEW: Adds space between all icons */
+    gap: 15px;
 }
 
 .edit-icon {
@@ -113,7 +112,6 @@ main {
     font-size: 16px;
 }
 
-/* NEW: Added archive and unarchive icon styles */
 .archive-icon {
     cursor: pointer;
     color: #6c757d;
@@ -412,4 +410,52 @@ a {
 .header-buttons {
     display: flex;
     gap: 10px;
+}
+
+/* NEW: Styles for Login Prompt and User Profile */
+.login-prompt-container {
+    text-align: center;
+    padding: 50px 20px;
+}
+
+#user-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+}
+
+#user-profile img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 50px;
+    right: 0;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+    z-index: 300;
+}
+
+.dropdown-menu a, .dropdown-menu button {
+    display: block;
+    padding: 12px 20px;
+    text-decoration: none;
+    color: #333;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.dropdown-menu a:hover, .dropdown-menu button:hover {
+    background-color: #f0f2f5;
 }
