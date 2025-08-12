@@ -33,7 +33,7 @@ const filterContainer = document.querySelector('.filter-container');
 //
 let allPacks = [];
 let currentFilter = 'all';
-let sortableInstance = null; // To hold our SortableJS instance
+let sortableInstance = null;
 
 function filterAndRenderPacks() {
     const searchTerm = searchInput.value.toLowerCase();
@@ -60,16 +60,17 @@ function renderPacks(packsToRender) {
     packsToRender.forEach(pack => {
         const link = document.createElement('a');
         link.href = `pack.html?id=${pack.id}`;
-        // The link itself will be the draggable item
         link.setAttribute('data-id', pack.id); 
         
         const packCard = document.createElement('div');
         packCard.className = 'pack-card';
 
+        // UPDATED: The h2 now gets a dynamic class for its color
+        const categoryClass = pack.category ? `title-${pack.category.toLowerCase()}` : 'title-general';
         packCard.innerHTML = `
             <div class="pack-card-header">
                 <i class="fas fa-grip-vertical drag-handle"></i>
-                <h2>${pack.title}</h2>
+                <h2 class="${categoryClass}">${pack.title}</h2>
                 <div class="card-actions">
                     <i class="fas fa-pencil-alt edit-icon" data-id="${pack.id}"></i>
                     <i class="fas fa-trash-alt delete-icon" data-id="${pack.id}"></i>
@@ -89,7 +90,6 @@ function renderPacks(packsToRender) {
         packListContainer.appendChild(link);
     });
 
-    // Initialize SortableJS after packs are rendered
     if (sortableInstance) {
         sortableInstance.destroy();
     }
@@ -101,9 +101,10 @@ function renderPacks(packsToRender) {
     });
 }
 
-// UPDATED: Now we order by the 'order' field
-packsCollection.orderBy('order').onSnapshot(snapshot => {
+// Using the temporary fix until the index is created
+packsCollection.onSnapshot(snapshot => {
     allPacks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    allPacks.sort((a, b) => (a.order || 0) - (b.order || 0));
     filterAndRenderPacks();
 });
 
@@ -143,10 +144,11 @@ window.addEventListener('click', (event) => {
 addPackForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const title = document.getElementById('pack-title-input').value;
+    // UPDATED: Get the value from the dropdown
     const category = document.getElementById('pack-category-input').value;
     const date = document.getElementById('pack-date-input').value;
 
-    if (title) {
+    if (title && category) { // Ensure a category is selected
         const currentPacksSnapshot = await packsCollection.get();
         const newOrder = currentPacksSnapshot.size;
 
@@ -157,10 +159,12 @@ addPackForm.addEventListener('submit', async (event) => {
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             totalItems: 0,
             packedItems: 0,
-            order: newOrder // Set order for the new pack
+            order: newOrder
         });
         addPackForm.reset();
         modal.style.display = "none";
+    } else {
+        alert("Please select a category.");
     }
 });
 
@@ -188,7 +192,6 @@ packListContainer.addEventListener('click', (event) => {
         if (confirmDelete) {
             const id = event.target.getAttribute('data-id');
             packsCollection.doc(id).delete();
-            // We don't need to re-order here, the onSnapshot listener will handle it
         }
     }
     else if (event.target.classList.contains('edit-icon')) {

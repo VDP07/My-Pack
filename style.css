@@ -59,6 +59,16 @@ main {
     word-break: break-word;
 }
 
+/* NEW: Pack Title Colors by Category */
+h2.title-travel { color: #17a2b8; }
+h2.title-school { color: #28a745; }
+h2.title-personal { color: #ffc107; }
+h2.title-coaching { color: #fd7e14; }
+h2.title-study { color: #6f42c1; }
+h2.title-other { color: #6c757d; }
+h2.title-general { color: #343a40; }
+
+
 .card-actions {
     display: flex;
     align-items: center;
@@ -96,6 +106,8 @@ main {
 .pack-category-display.coaching { background-color: #fd7e14; }
 .pack-category-display.study { background-color: #6f42c1; }
 .pack-category-display.other { background-color: #6c757d; }
+.pack-category-display.general { background-color: #6c757d; }
+
 
 .pack-card-body {
     padding: 15px;
@@ -157,7 +169,7 @@ a {
     gap: 10px;
     margin-bottom: 20px;
 }
-.add-item-form input {
+.add-item-form input, .add-item-form select { /* UPDATED: Added select */
     flex-grow: 1;
     padding: 10px;
     border: 1px solid #ccc;
@@ -245,11 +257,12 @@ a {
     gap: 15px;
 }
 
-#add-pack-form input {
+#add-pack-form input, #add-pack-form select { /* UPDATED: Added select */
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
     font-size: 16px;
+    background-color: white; /* Ensures dropdown looks good */
 }
 
 #add-pack-form button {
@@ -291,7 +304,7 @@ a {
     box-sizing: border-box; /* Important for padding and width */
 }
 
-/* NEW: Styles for Filter Buttons */
+/* Styles for Filter Buttons */
 .filter-container {
     padding: 10px 20px;
     background-color: white;
@@ -319,15 +332,4 @@ a {
     background-color: #007bff;
     color: white;
     border-color: #007bff;
-}
-/* Styles for Drag and Drop */
-.drag-handle {
-    cursor: grab;
-    color: #ccc;
-    margin-right: 15px;
-}
-
-.sortable-ghost {
-    opacity: 0.4;
-    background-color: #c8ebfb;
 }

@@ -47,16 +47,24 @@
             <h2>Create New Pack</h2>
             <form id="add-pack-form">
                 <input type="text" id="pack-title-input" placeholder="Pack Title" required>
-                <input type="text" id="pack-category-input" placeholder="Category (e.g., Race, School)">
+                <!-- UPDATED: This is now a dropdown list -->
+                <select id="pack-category-input" required>
+                    <option value="" disabled selected>Select a Category</option>
+                    <option value="Travel">Travel</option>
+                    <option value="School">School</option>
+                    <option value="Personal">Personal</option>
+                    <option value="Coaching">Coaching</option>
+                    <option value="Study">Study</option>
+                    <option value="Other">Other</option>
+                    <option value="General">General</option>
+                </select>
                 <input type="date" id="pack-date-input">
                 <button type="submit">Create Pack</button>
             </form>
         </div>
     </div>
 
-    <!-- NEW: Add the SortableJS library here -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="script.js"></script>
