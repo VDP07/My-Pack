@@ -23,7 +23,8 @@ const templatesCollection = db.collection('templates');
 const packListContainer = document.getElementById('pack-list-container');
 const addPackButton = document.getElementById('add-pack-button');
 const modal = document.getElementById('add-pack-modal');
-const closeModalButton = document.querySelector('.close-button');
+const modalTitle = modal.querySelector('h2');
+const closeModalButton = modal.querySelector('.close-button');
 const searchInput = document.getElementById('search-input');
 const filterContainer = document.querySelector('.filter-container');
 
@@ -40,11 +41,18 @@ const templateSelectInput = document.getElementById('template-select-input');
 let allPacks = [];
 let currentFilter = 'all';
 let sortableInstance = null;
+let currentEditId = null; // To track which pack we are editing
+
+// NEW: Helper function to format dates
+function formatDate(isoDate) {
+    if (!isoDate || typeof isoDate !== 'string') return '';
+    const date = new Date(isoDate + 'T00:00:00'); // Add time to avoid timezone issues
+    const options = { day: '2-digit', month: 'short', year: '2-digit' };
+    return date.toLocaleDateString('en-GB', options).replace(/ /g, '-');
+}
 
 function filterAndRenderPacks() {
     const searchTerm = searchInput.value.toLowerCase();
-    
-    // Start with all packs that are NOT archived
     let filteredPacks = allPacks.filter(pack => !pack.archived);
 
     if (currentFilter !== 'all') {
@@ -79,7 +87,6 @@ function renderPacks(packsToRender) {
                 <i class="fas fa-grip-vertical drag-handle"></i>
                 <h2>${pack.title}</h2>
                 <div class="card-actions">
-                    <!-- NEW: Archive button added -->
                     <i class="fas fa-archive archive-icon" data-id="${pack.id}"></i>
                     <i class="fas fa-pencil-alt edit-icon" data-id="${pack.id}"></i>
                     <i class="fas fa-trash-alt delete-icon" data-id="${pack.id}"></i>
@@ -87,7 +94,7 @@ function renderPacks(packsToRender) {
             </div>
             <div class="pack-card-body">
                 <p class="pack-category-display ${pack.category ? pack.category.toLowerCase() : ''}">${pack.category || 'General'}</p>
-                <p class="pack-date-display">${pack.date || ''}</p>
+                <p class="pack-date-display">${formatDate(pack.date)}</p>
                 <div class="progress-container">
                     <div class="progress-bar" style="width: ${((pack.packedItems || 0) / (pack.totalItems || 1)) * 100}%;"></div>
                 </div>
@@ -110,10 +117,9 @@ function renderPacks(packsToRender) {
     });
 }
 
-// The main listener now fetches ALL packs, including archived ones
 packsCollection.orderBy('order').onSnapshot(snapshot => {
     allPacks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    filterAndRenderPacks(); // The filtering function will hide the archived ones
+    filterAndRenderPacks();
 });
 
 //
@@ -132,7 +138,7 @@ filterContainer.addEventListener('click', (event) => {
 });
 
 //
-// Part 5: HANDLE THE "ADD PACK" MODAL
+// Part 5: HANDLE THE ADD/EDIT PACK MODAL
 // ===================================
 //
 async function loadTemplatesIntoModal() {
@@ -147,6 +153,11 @@ async function loadTemplatesIntoModal() {
 }
 
 addPackButton.addEventListener('click', () => {
+    currentEditId = null; // Ensure we are in "add" mode
+    modalTitle.textContent = "Create New Pack";
+    addPackForm.querySelector('button').textContent = "Create Pack";
+    modal.querySelector('.modal-options').style.display = 'flex'; // Show tabs
+    addPackForm.reset();
     modal.style.display = "block";
     loadTemplatesIntoModal();
 });
@@ -181,20 +192,31 @@ addPackForm.addEventListener('submit', async (event) => {
     const category = document.getElementById('pack-category-input').value;
     const date = document.getElementById('pack-date-input').value;
 
-    if (title && category) {
+    if (!title || !category) {
+        alert("Please provide a title and select a category.");
+        return;
+    }
+
+    if (currentEditId) {
+        // UPDATE existing pack
+        packsCollection.doc(currentEditId).update({
+            title: title,
+            category: category,
+            date: date
+        });
+    } else {
+        // ADD new pack
         const currentPacksSnapshot = await packsCollection.where("archived", "==", false).get();
         const newOrder = currentPacksSnapshot.size;
         packsCollection.add({
             title: title, category: category, date: date,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             totalItems: 0, packedItems: 0, order: newOrder,
-            archived: false // NEW: New packs are not archived
+            archived: false
         });
-        addPackForm.reset();
-        modal.style.display = "none";
-    } else {
-        alert("Please select a category.");
     }
+    addPackForm.reset();
+    modal.style.display = "none";
 });
 
 addFromTemplateForm.addEventListener('submit', async (event) => {
@@ -224,7 +246,7 @@ addFromTemplateForm.addEventListener('submit', async (event) => {
             totalItems: templateItems.length,
             packedItems: 0,
             order: newOrder,
-            archived: false // NEW: New packs are not archived
+            archived: false
         });
 
         const batch = db.batch();
@@ -245,7 +267,7 @@ addFromTemplateForm.addEventListener('submit', async (event) => {
 });
 
 //
-// Part 6: EDIT, DELETE, ARCHIVE, AND SAVE ORDER
+// Part 6: ACTIONS & SAVE ORDER
 // ===================================
 //
 function savePackOrder() {
@@ -260,29 +282,37 @@ function savePackOrder() {
 }
 
 packListContainer.addEventListener('click', (event) => {
+    const id = event.target.getAttribute('data-id');
+    if (!id) return;
+
     if (event.target.classList.contains('archive-icon')) {
         event.preventDefault();
-        const id = event.target.getAttribute('data-id');
         packsCollection.doc(id).update({ archived: true });
     }
     else if (event.target.classList.contains('delete-icon')) {
         event.preventDefault(); 
         const confirmDelete = confirm("Are you sure you want to delete this pack?");
         if (confirmDelete) {
-            const id = event.target.getAttribute('data-id');
             packsCollection.doc(id).delete();
         }
     }
     else if (event.target.classList.contains('edit-icon')) {
         event.preventDefault(); 
-        const id = event.target.getAttribute('data-id');
-        const currentTitle = event.target.closest('.pack-card-header').querySelector('h2').textContent;
-        const newTitle = prompt("Enter the new title:", currentTitle);
+        currentEditId = id;
+        const packToEdit = allPacks.find(p => p.id === id);
 
-        if (newTitle && newTitle.trim() !== '') {
-            packsCollection.doc(id).update({
-                title: newTitle
-            });
-        }
+        // Pre-fill the form with existing data
+        document.getElementById('pack-title-input').value = packToEdit.title;
+        document.getElementById('pack-category-input').value = packToEdit.category;
+        document.getElementById('pack-date-input').value = packToEdit.date;
+        
+        // Configure modal for editing
+        modalTitle.textContent = "Edit Pack";
+        addPackForm.querySelector('button').textContent = "Save Changes";
+        modal.querySelector('.modal-options').style.display = 'none'; // Hide tabs
+        addPackForm.style.display = 'flex'; // Ensure blank form is visible
+        addFromTemplateForm.style.display = 'none';
+        
+        modal.style.display = "block";
     }
 });

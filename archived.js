@@ -22,7 +22,18 @@ const packsCollection = db.collection('packs');
 const archivedListContainer = document.getElementById('archived-list-container');
 
 //
-// Part 3: LISTEN FOR AND DISPLAY ARCHIVED PACKS
+// Part 3: HELPER FUNCTION
+// ===================================
+//
+function formatDate(isoDate) {
+    if (!isoDate || typeof isoDate !== 'string') return '';
+    const date = new Date(isoDate + 'T00:00:00');
+    const options = { day: '2-digit', month: 'short', year: '2-digit' };
+    return date.toLocaleDateString('en-GB', options).replace(/ /g, '-');
+}
+
+//
+// Part 4: LISTEN FOR AND DISPLAY ARCHIVED PACKS
 // ===================================
 //
 // This query specifically fetches packs where the 'archived' field is true
@@ -54,7 +65,7 @@ packsCollection.where("archived", "==", true).orderBy('createdAt', 'desc').onSna
             </div>
             <div class="pack-card-body">
                 <p class="pack-category-display ${pack.category ? pack.category.toLowerCase() : ''}">${pack.category || 'General'}</p>
-                <p class="pack-date-display">${pack.date || ''}</p>
+                <p class="pack-date-display">${formatDate(pack.date)}</p>
             </div>
         `;
         archivedListContainer.appendChild(packCard);
@@ -62,7 +73,7 @@ packsCollection.where("archived", "==", true).orderBy('createdAt', 'desc').onSna
 });
 
 //
-// Part 4: UN-ARCHIVE OR DELETE A PACK
+// Part 5: UN-ARCHIVE OR DELETE A PACK
 // ===================================
 //
 archivedListContainer.addEventListener('click', (event) => {
