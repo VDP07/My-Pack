@@ -30,15 +30,20 @@ const addItemForm = document.querySelector('.add-item-form');
 const newItemInput = document.getElementById('new-item-input');
 const newItemNoteInput = document.getElementById('new-item-note-input');
 const itemList = document.getElementById('item-list');
+const saveTemplateBtn = document.getElementById('save-template-btn'); // NEW: Get the template button
 
 //
 // Part 4: LOAD THE PACK'S TITLE
 // ===================================
 //
-db.collection('packs').doc(packId).get().then(doc => {
+let currentPackData = {}; // To store the pack's data for templating
+const packRef = db.collection('packs').doc(packId);
+
+packRef.get().then(doc => {
     if (doc.exists) {
-        packTitleElement.textContent = doc.data().title;
-        document.title = doc.data().title;
+        currentPackData = doc.data();
+        packTitleElement.textContent = currentPackData.title;
+        document.title = currentPackData.title;
     } else {
         packTitleElement.textContent = "Pack not found";
     }
@@ -48,10 +53,9 @@ db.collection('packs').doc(packId).get().then(doc => {
 // Part 5: LISTEN FOR AND DISPLAY ITEMS
 // ===================================
 //
-const itemsCollection = db.collection('packs').doc(packId).collection('items');
-let sortableInstance = null; // To hold our SortableJS instance
+const itemsCollection = packRef.collection('items');
+let sortableInstance = null;
 
-// UPDATED: Now we order by the 'order' field
 itemsCollection.orderBy('order').onSnapshot(snapshot => {
     itemList.innerHTML = ''; 
     const items = [];
@@ -77,15 +81,14 @@ itemsCollection.orderBy('order').onSnapshot(snapshot => {
         itemList.appendChild(li);
     });
 
-    // Initialize SortableJS after items are rendered
     if (sortableInstance) {
         sortableInstance.destroy();
     }
     sortableInstance = new Sortable(itemList, {
-        handle: '.drag-handle', // Use the grip icon to drag
+        handle: '.drag-handle',
         animation: 150,
-        ghostClass: 'sortable-ghost', // A class for the drop placeholder
-        onEnd: saveOrder, // Call our save function when dragging ends
+        ghostClass: 'sortable-ghost',
+        onEnd: saveOrder,
     });
 });
 
@@ -99,7 +102,6 @@ addItemForm.addEventListener('submit', async (event) => {
     const itemNote = newItemNoteInput.value.trim();
 
     if (itemName) {
-        // Get the current number of items to set the order for the new one
         const currentItemsSnapshot = await itemsCollection.get();
         const newOrder = currentItemsSnapshot.size;
 
@@ -108,10 +110,9 @@ addItemForm.addEventListener('submit', async (event) => {
             note: itemNote,
             packed: false,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            order: newOrder // Set the order to be the last item
+            order: newOrder
         });
 
-        const packRef = db.collection('packs').doc(packId);
         packRef.update({
             totalItems: firebase.firestore.FieldValue.increment(1)
         });
@@ -127,7 +128,7 @@ addItemForm.addEventListener('submit', async (event) => {
 //
 function saveOrder() {
     const items = itemList.querySelectorAll('li');
-    const batch = db.batch(); // Use a batch to update all items at once
+    const batch = db.batch();
 
     items.forEach((item, index) => {
         const docId = item.getAttribute('data-id');
@@ -135,7 +136,7 @@ function saveOrder() {
         batch.update(docRef, { order: index });
     });
 
-    batch.commit(); // Send all updates to Firebase
+    batch.commit();
 }
 
 itemList.addEventListener('click', (event) => {
@@ -144,7 +145,6 @@ itemList.addEventListener('click', (event) => {
     if (!li) return;
 
     const id = li.getAttribute('data-id');
-    const packRef = db.collection('packs').doc(packId);
 
     if (target.classList.contains('delete-item-icon')) {
         itemsCollection.doc(id).delete();
@@ -159,7 +159,6 @@ itemList.addEventListener('click', (event) => {
                 totalItems: firebase.firestore.FieldValue.increment(-1)
             });
         }
-        // After deleting, we should re-run saveOrder to fix the order numbers
         setTimeout(saveOrder, 100);
     }
 
@@ -171,5 +170,47 @@ itemList.addEventListener('click', (event) => {
         } else {
             packRef.update({ packedItems: firebase.firestore.FieldValue.increment(-1) });
         }
+    }
+});
+
+//
+// Part 8: SAVE AS TEMPLATE
+// ===================================
+//
+saveTemplateBtn.addEventListener('click', async () => {
+    const templateName = prompt("Enter a name for this template:", currentPackData.title);
+    if (!templateName) return;
+
+    try {
+        // 1. Get all items from the current pack
+        const itemsSnapshot = await itemsCollection.orderBy('order').get();
+        const itemsData = itemsSnapshot.docs.map(doc => doc.data());
+
+        // 2. Create a new template document
+        const templatesCollection = db.collection('templates');
+        const newTemplateRef = await templatesCollection.add({
+            name: templateName,
+            category: currentPackData.category,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 3. Create a batch to add all items to the new template's sub-collection
+        const batch = db.batch();
+        const newItemsCollection = newTemplateRef.collection('items');
+        itemsData.forEach(item => {
+            // We don't need packed status for a template
+            const { packed, ...templateItem } = item;
+            const newItemRef = newItemsCollection.doc(); // Create a new doc reference
+            batch.set(newItemRef, templateItem);
+        });
+
+        // 4. Commit the batch
+        await batch.commit();
+
+        alert(`Template "${templateName}" saved successfully!`);
+
+    } catch (error) {
+        console.error("Error saving template: ", error);
+        alert("There was an error saving the template.");
     }
 });

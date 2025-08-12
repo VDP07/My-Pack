@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pack Details</title>
+    <title>My Templates</title>
     
     <link rel="stylesheet" href="style.css">
     
@@ -19,31 +19,18 @@
         <a href="/" style="text-decoration: none; color: inherit; font-size: 24px;">
             <i class="fas fa-chevron-left"></i>
         </a>
-        <h1 id="pack-title">Loading...</h1>
-        <!-- This new button has been added -->
-        <button id="save-template-btn" class="header-action-btn">
-            <i class="fas fa-save"></i> Save as Template
-        </button>
+        <h1>My Templates</h1>
     </header>
 
-    <main>
-        <form class="add-item-form">
-            <input type="text" id="new-item-input" placeholder="New item name..." required>
-            <input type="text" id="new-item-note-input" placeholder="Note (optional)...">
-            <button type="submit">Add</button>
-        </form>
-
-        <ul id="item-list" class="item-list-container">
-            <!-- Items will be added here by JavaScript -->
-        </ul>
+    <main id="template-list-container">
+        <p class="loading-message">Loading your templates...</p>
     </main>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-
-    <script src="pack-detail.js"></script>
+    
+    <!-- This page needs its own JavaScript file -->
+    <script src="templates.js"></script>
     
 </body>
 </html>
