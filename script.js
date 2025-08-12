@@ -14,7 +14,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const packsCollection = db.collection('packs');
-const templatesCollection = db.collection('templates'); // NEW: Reference to templates
+const templatesCollection = db.collection('templates');
 
 //
 // Part 2: GET HTML ELEMENTS
@@ -27,13 +27,11 @@ const closeModalButton = document.querySelector('.close-button');
 const searchInput = document.getElementById('search-input');
 const filterContainer = document.querySelector('.filter-container');
 
-// NEW: Get all modal elements
 const createBlankBtn = document.getElementById('create-blank-btn');
 const createFromTemplateBtn = document.getElementById('create-from-template-btn');
 const addPackForm = document.getElementById('add-pack-form');
 const addFromTemplateForm = document.getElementById('add-from-template-form');
 const templateSelectInput = document.getElementById('template-select-input');
-
 
 //
 // Part 3: APP STATE & RENDERING
@@ -45,7 +43,9 @@ let sortableInstance = null;
 
 function filterAndRenderPacks() {
     const searchTerm = searchInput.value.toLowerCase();
-    let filteredPacks = allPacks;
+    
+    // Start with all packs that are NOT archived
+    let filteredPacks = allPacks.filter(pack => !pack.archived);
 
     if (currentFilter !== 'all') {
         filteredPacks = filteredPacks.filter(pack => pack.category === currentFilter);
@@ -61,7 +61,7 @@ function filterAndRenderPacks() {
 function renderPacks(packsToRender) {
     packListContainer.innerHTML = '';
     if (packsToRender.length === 0) {
-        packListContainer.innerHTML = `<p class="loading-message">No packs found.</p>`;
+        packListContainer.innerHTML = `<p class="loading-message">No active packs found.</p>`;
         return;
     }
 
@@ -79,6 +79,8 @@ function renderPacks(packsToRender) {
                 <i class="fas fa-grip-vertical drag-handle"></i>
                 <h2>${pack.title}</h2>
                 <div class="card-actions">
+                    <!-- NEW: Archive button added -->
+                    <i class="fas fa-archive archive-icon" data-id="${pack.id}"></i>
                     <i class="fas fa-pencil-alt edit-icon" data-id="${pack.id}"></i>
                     <i class="fas fa-trash-alt delete-icon" data-id="${pack.id}"></i>
                 </div>
@@ -108,11 +110,10 @@ function renderPacks(packsToRender) {
     });
 }
 
-// Using the temporary fix until the index is created
-packsCollection.onSnapshot(snapshot => {
+// The main listener now fetches ALL packs, including archived ones
+packsCollection.orderBy('order').onSnapshot(snapshot => {
     allPacks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    allPacks.sort((a, b) => (a.order || 0) - (b.order || 0));
-    filterAndRenderPacks();
+    filterAndRenderPacks(); // The filtering function will hide the archived ones
 });
 
 //
@@ -136,7 +137,7 @@ filterContainer.addEventListener('click', (event) => {
 //
 async function loadTemplatesIntoModal() {
     const snapshot = await templatesCollection.orderBy('name').get();
-    templateSelectInput.innerHTML = '<option value="" disabled selected>Choose a template...</option>'; // Reset
+    templateSelectInput.innerHTML = '<option value="" disabled selected>Choose a template...</option>';
     snapshot.forEach(doc => {
         const option = document.createElement('option');
         option.value = doc.id;
@@ -147,7 +148,7 @@ async function loadTemplatesIntoModal() {
 
 addPackButton.addEventListener('click', () => {
     modal.style.display = "block";
-    loadTemplatesIntoModal(); // Load templates each time modal is opened
+    loadTemplatesIntoModal();
 });
 
 closeModalButton.addEventListener('click', () => {
@@ -160,7 +161,6 @@ window.addEventListener('click', (event) => {
     }
 });
 
-// Handle switching between modal tabs
 createBlankBtn.addEventListener('click', () => {
     createBlankBtn.classList.add('active');
     createFromTemplateBtn.classList.remove('active');
@@ -175,8 +175,6 @@ createFromTemplateBtn.addEventListener('click', () => {
     addPackForm.style.display = 'none';
 });
 
-
-// Handle the "Create Blank" form submission
 addPackForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const title = document.getElementById('pack-title-input').value;
@@ -184,12 +182,13 @@ addPackForm.addEventListener('submit', async (event) => {
     const date = document.getElementById('pack-date-input').value;
 
     if (title && category) {
-        const currentPacksSnapshot = await packsCollection.get();
+        const currentPacksSnapshot = await packsCollection.where("archived", "==", false).get();
         const newOrder = currentPacksSnapshot.size;
         packsCollection.add({
             title: title, category: category, date: date,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            totalItems: 0, packedItems: 0, order: newOrder
+            totalItems: 0, packedItems: 0, order: newOrder,
+            archived: false // NEW: New packs are not archived
         });
         addPackForm.reset();
         modal.style.display = "none";
@@ -198,7 +197,6 @@ addPackForm.addEventListener('submit', async (event) => {
     }
 });
 
-// Handle the "Create From Template" form submission
 addFromTemplateForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const newPackTitle = document.getElementById('template-pack-title-input').value;
@@ -211,14 +209,12 @@ addFromTemplateForm.addEventListener('submit', async (event) => {
     }
 
     try {
-        // 1. Get the template data
         const templateDoc = await templatesCollection.doc(templateId).get();
         const templateData = templateDoc.data();
         const templateItemsSnapshot = await templatesCollection.doc(templateId).collection('items').get();
         const templateItems = templateItemsSnapshot.docs.map(doc => doc.data());
 
-        // 2. Create the new pack
-        const currentPacksSnapshot = await packsCollection.get();
+        const currentPacksSnapshot = await packsCollection.where("archived", "==", false).get();
         const newOrder = currentPacksSnapshot.size;
         const newPackRef = await packsCollection.add({
             title: newPackTitle,
@@ -227,10 +223,10 @@ addFromTemplateForm.addEventListener('submit', async (event) => {
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             totalItems: templateItems.length,
             packedItems: 0,
-            order: newOrder
+            order: newOrder,
+            archived: false // NEW: New packs are not archived
         });
 
-        // 3. Copy all items from the template to the new pack
         const batch = db.batch();
         const newItemsCollection = newPackRef.collection('items');
         templateItems.forEach(item => {
@@ -248,9 +244,8 @@ addFromTemplateForm.addEventListener('submit', async (event) => {
     }
 });
 
-
 //
-// Part 6: EDIT, DELETE, AND SAVE ORDER
+// Part 6: EDIT, DELETE, ARCHIVE, AND SAVE ORDER
 // ===================================
 //
 function savePackOrder() {
@@ -265,7 +260,12 @@ function savePackOrder() {
 }
 
 packListContainer.addEventListener('click', (event) => {
-    if (event.target.classList.contains('delete-icon')) {
+    if (event.target.classList.contains('archive-icon')) {
+        event.preventDefault();
+        const id = event.target.getAttribute('data-id');
+        packsCollection.doc(id).update({ archived: true });
+    }
+    else if (event.target.classList.contains('delete-icon')) {
         event.preventDefault(); 
         const confirmDelete = confirm("Are you sure you want to delete this pack?");
         if (confirmDelete) {

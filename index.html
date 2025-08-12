@@ -17,10 +17,15 @@
 
     <header>
         <h1>My Packs</h1>
-        <!-- NEW: Link to the templates page -->
-        <a href="/templates.html" class="header-action-btn">
-            <i class="fas fa-layer-group"></i> Templates
-        </a>
+        <!-- NEW: Group for header buttons -->
+        <div class="header-buttons">
+            <a href="/templates.html" class="header-action-btn">
+                <i class="fas fa-layer-group"></i> Templates
+            </a>
+            <a href="/archived.html" class="header-action-btn">
+                <i class="fas fa-archive"></i> Archived
+            </a>
+        </div>
     </header>
 
     <div class="search-container">
@@ -46,7 +51,6 @@
         <i class="fas fa-plus"></i>
     </button>
     
-    <!-- UPDATED: The modal is now completely redesigned -->
     <div id="add-pack-modal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
@@ -57,7 +61,6 @@
                 <button id="create-from-template-btn" class="modal-option-btn">From Template</button>
             </div>
 
-            <!-- Form for creating a blank pack -->
             <form id="add-pack-form">
                 <input type="text" id="pack-title-input" placeholder="Pack Title" required>
                 <select id="pack-category-input" required>
@@ -74,12 +77,10 @@
                 <button type="submit">Create Pack</button>
             </form>
 
-            <!-- Form for creating from a template -->
             <form id="add-from-template-form" style="display: none;">
                 <input type="text" id="template-pack-title-input" placeholder="New Pack Title" required>
                 <select id="template-select-input" required>
                     <option value="" disabled selected>Choose a template...</option>
-                    <!-- Templates will be loaded here by JavaScript -->
                 </select>
                 <input type="date" id="template-pack-date-input">
                 <button type="submit">Create From Template</button>

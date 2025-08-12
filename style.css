@@ -394,3 +394,8 @@ a {
     border-bottom: 3px solid #007bff;
     font-weight: bold;
 }
+/* Styles for Header Button Group */
+.header-buttons {
+    display: flex;
+    gap: 10px;
+}
