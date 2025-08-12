@@ -21,7 +21,7 @@ const auth = firebase.auth();
 //
 const urlParams = new URLSearchParams(window.location.search);
 const packId = urlParams.get('id');
-const ownerId = urlParams.get('ownerId'); // NEW: Get the owner's ID
+const ownerId = urlParams.get('ownerId');
 
 //
 // Part 3: GET HTML ELEMENTS
@@ -45,15 +45,15 @@ const collaboratorsListUl = document.querySelector('#collaborators-list ul');
 //
 let currentPackData = {};
 let currentUser = null;
-let packRef; // This will be our reference to the pack document
-let itemsCollection; // This will be the reference to the items sub-collection
+let packRef;
+let itemsCollection;
 let unsubscribePackListener = null;
 
 auth.onAuthStateChanged(user => {
     currentUser = user;
     if (user) {
-        // Determine the correct path to the pack document
-        const packOwnerId = ownerId || user.uid; // If ownerId is in URL use it, otherwise assume current user is owner
+        // CORRECTED LOGIC: Determine the correct path to the pack document
+        const packOwnerId = ownerId || user.uid; // Use ownerId from URL if it exists, otherwise assume current user
         packRef = db.collection('users').doc(packOwnerId).collection('packs').doc(packId);
         itemsCollection = packRef.collection('items');
         
@@ -72,7 +72,6 @@ auth.onAuthStateChanged(user => {
 function loadPackDetails() {
     if (!packRef) return;
     
-    // Set up a real-time listener for the pack itself
     unsubscribePackListener = packRef.onSnapshot(doc => {
         if (doc.exists) {
             currentPackData = doc.data();
@@ -87,7 +86,7 @@ function loadPackDetails() {
             }
 
         } else {
-            packTitleElement.textContent = "Pack not found";
+            packTitleElement.textContent = "Pack not found or you don't have access.";
         }
     });
 }
