@@ -65,12 +65,12 @@ function renderPacks(packsToRender) {
         const packCard = document.createElement('div');
         packCard.className = 'pack-card';
 
-        // UPDATED: The h2 now gets a dynamic class for its color
-        const categoryClass = pack.category ? `title-${pack.category.toLowerCase()}` : 'title-general';
+        // UPDATED: The dynamic class is now on the header div, not the h2
+        const headerClass = pack.category ? `header-${pack.category.toLowerCase()}` : 'header-general';
         packCard.innerHTML = `
-            <div class="pack-card-header">
+            <div class="pack-card-header ${headerClass}">
                 <i class="fas fa-grip-vertical drag-handle"></i>
-                <h2 class="${categoryClass}">${pack.title}</h2>
+                <h2>${pack.title}</h2>
                 <div class="card-actions">
                     <i class="fas fa-pencil-alt edit-icon" data-id="${pack.id}"></i>
                     <i class="fas fa-trash-alt delete-icon" data-id="${pack.id}"></i>
@@ -144,11 +144,10 @@ window.addEventListener('click', (event) => {
 addPackForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const title = document.getElementById('pack-title-input').value;
-    // UPDATED: Get the value from the dropdown
     const category = document.getElementById('pack-category-input').value;
     const date = document.getElementById('pack-date-input').value;
 
-    if (title && category) { // Ensure a category is selected
+    if (title && category) { 
         const currentPacksSnapshot = await packsCollection.get();
         const newOrder = currentPacksSnapshot.size;
 
