@@ -13,7 +13,8 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-const packsCollection = db.collection('packs');
+const auth = firebase.auth(); // NEW: Initialize Auth
+let packsCollection; // Will be set when user logs in
 
 //
 // Part 2: GET HTML ELEMENTS
@@ -22,7 +23,23 @@ const packsCollection = db.collection('packs');
 const archivedListContainer = document.getElementById('archived-list-container');
 
 //
-// Part 3: HELPER FUNCTION
+// Part 3: AUTHENTICATION
+// ===================================
+//
+auth.onAuthStateChanged(user => {
+    if (user) {
+        // CORRECTED: Point to the user's private packs collection
+        packsCollection = db.collection('users').doc(user.uid).collection('packs');
+        listenForArchivedPacks();
+    } else {
+        // If user is not logged in, redirect to the home page
+        window.location.href = '/';
+    }
+});
+
+
+//
+// Part 4: HELPER FUNCTION
 // ===================================
 //
 function formatDate(isoDate) {
@@ -33,52 +50,58 @@ function formatDate(isoDate) {
 }
 
 //
-// Part 4: LISTEN FOR AND DISPLAY ARCHIVED PACKS
+// Part 5: LISTEN FOR AND DISPLAY ARCHIVED PACKS
 // ===================================
 //
-// This query specifically fetches packs where the 'archived' field is true
-packsCollection.where("archived", "==", true).orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-    archivedListContainer.innerHTML = ''; // Clear the list
+function listenForArchivedPacks() {
+    if (!packsCollection) return;
+    
+    packsCollection.where("archived", "==", true).orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+        archivedListContainer.innerHTML = ''; // Clear the list
 
-    if (snapshot.empty) {
-        archivedListContainer.innerHTML = `<p class="loading-message">You have no archived packs.</p>`;
-        return;
-    }
+        if (snapshot.empty) {
+            archivedListContainer.innerHTML = `<p class="loading-message">You have no archived packs.</p>`;
+            return;
+        }
 
-    snapshot.forEach(doc => {
-        const pack = doc.data();
-        const id = doc.id;
+        snapshot.forEach(doc => {
+            const pack = doc.data();
+            const id = doc.id;
 
-        const packCard = document.createElement('div');
-        packCard.className = 'pack-card';
-        packCard.setAttribute('data-id', id);
+            const packCard = document.createElement('div');
+            packCard.className = 'pack-card';
+            packCard.setAttribute('data-id', id);
 
-        const headerClass = pack.category ? `header-${pack.category.toLowerCase()}` : 'header-general';
+            const headerClass = pack.category ? `header-${pack.category.toLowerCase()}` : 'header-general';
 
-        packCard.innerHTML = `
-            <div class="pack-card-header ${headerClass}">
-                <h2>${pack.title}</h2>
-                <div class="card-actions">
-                    <i class="fas fa-undo unarchive-icon" title="Restore Pack"></i>
-                    <i class="fas fa-trash-alt delete-icon" title="Delete Permanently"></i>
+            packCard.innerHTML = `
+                <div class="pack-card-header ${headerClass}">
+                    <h2>${pack.title}</h2>
+                    <div class="card-actions">
+                        <i class="fas fa-undo unarchive-icon" title="Restore Pack"></i>
+                        <i class="fas fa-trash-alt delete-icon" title="Delete Permanently"></i>
+                    </div>
                 </div>
-            </div>
-            <div class="pack-card-body">
-                <p class="pack-category-display ${pack.category ? pack.category.toLowerCase() : ''}">${pack.category || 'General'}</p>
-                <p class="pack-date-display">${formatDate(pack.date)}</p>
-            </div>
-        `;
-        archivedListContainer.appendChild(packCard);
+                <div class="pack-card-body">
+                    <p class="pack-category-display ${pack.category ? pack.category.toLowerCase() : ''}">${pack.category || 'General'}</p>
+                    <p class="pack-date-display">${formatDate(pack.date)}</p>
+                </div>
+            `;
+            archivedListContainer.appendChild(packCard);
+        });
+    }, error => {
+        console.error("Error fetching archived packs:", error);
+        archivedListContainer.innerHTML = `<p class="loading-message">Could not load archived packs. You may need to create a database index.</p>`;
     });
-});
+}
 
 //
-// Part 5: UN-ARCHIVE OR DELETE A PACK
+// Part 6: UN-ARCHIVE OR DELETE A PACK
 // ===================================
 //
 archivedListContainer.addEventListener('click', (event) => {
     const card = event.target.closest('.pack-card');
-    if (!card) return;
+    if (!card || !packsCollection) return;
     
     const id = card.getAttribute('data-id');
 
@@ -91,9 +114,6 @@ archivedListContainer.addEventListener('click', (event) => {
     if (event.target.classList.contains('delete-icon')) {
         const confirmDelete = confirm("Are you sure you want to PERMANENTLY delete this pack and all its items?");
         if (confirmDelete) {
-            // Note: Deleting a pack document does NOT automatically delete its sub-collections.
-            // For a complete cleanup, more advanced code (a cloud function) would be needed.
-            // For now, we will just delete the main pack document.
             packsCollection.doc(id).delete();
         }
     }
